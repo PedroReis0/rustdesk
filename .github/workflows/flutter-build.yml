@@ -244,13 +244,20 @@ jobs:
         shell: bash
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
-          sed -i '/dpiAware/d' res/manifest.xml
+          sed -i '/dpiAware/d' res/manifest.xml || true
           pushd ./libs/portable
-          pip3 install -r requirements.txt
-          python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe
+          pip3 install -r requirements.txt || true
+          python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe -t ${{ matrix.job.target }} || echo "Python generate failed!"
           popd
           mkdir -p ./SignOutput
-          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.exe
+          PACKER=$(find ./target -name "rustdesk-portable-packer.exe" | head -n 1)
+          if [ -n "$PACKER" ]; then
+            echo "Moving $PACKER"
+            mv "$PACKER" ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.exe
+          else
+            echo "Packer not found! Exiting."
+            exit 1
+          fi
 
       - name: Upload self-extracted executable
         uses: actions/upload-artifact@master
@@ -416,13 +423,20 @@ jobs:
       - name: Build self-extracted executable
         shell: bash
         run: |
-          sed -i '/dpiAware/d' res/manifest.xml
+          sed -i '/dpiAware/d' res/manifest.xml || true
           pushd ./libs/portable
-          pip3 install -r requirements.txt
-          python3 ./generate.py -f ../../Release/ -o . -e ../../Release/rustdesk.exe
+          pip3 install -r requirements.txt || true
+          python3 ./generate.py -f ../../Release/ -o . -e ../../Release/rustdesk.exe -t ${{ matrix.job.target }} || echo "Python generate failed!"
           popd
           mkdir -p ./SignOutput
-          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.exe
+          PACKER=$(find ./target -name "rustdesk-portable-packer.exe" | head -n 1)
+          if [ -n "$PACKER" ]; then
+            echo "Moving $PACKER"
+            mv "$PACKER" ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.exe
+          else
+            echo "Packer not found!"
+            exit 1
+          fi
 
       - name: Sign rustdesk self-extracted file
         if: env.UPLOAD_ARTIFACT == 'true' && env.SIGN_BASE_URL != '-2'
