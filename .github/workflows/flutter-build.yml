@@ -257,7 +257,7 @@ jobs:
         if: env.UPLOAD_ARTIFACT == 'true'
         with:
           name: rustdesk-single-executable-windows-${{ matrix.job.arch }}
-          path: ./SignOutput/rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.exe
+          path: ./SignOutput/rustdesk-*.exe
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
